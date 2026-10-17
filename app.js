@@ -79,9 +79,11 @@
     autoSpeak: false,
     font: 'sarabun',
     theme: 'auto',
-    // 'random' = 随机组合；'fixed' = 自己挑一个辅音 / 一个元音来拼读
-    mode: 'random',
-    fixedOnset: null,
+  // 'random' = 随机组合；'fixed' = 自己挑一个辅音 / 一个元音来拼读
+  mode: 'random',
+  // 两种模式各自的卡（会话内保留，不持久化）：固定 / 随机互不影响
+  modeCards: { random: null, fixed: null },
+  fixedOnset: null,
     fixedVowelId: null,
     // 勾选的字母筛不出词、退回整池抽（只在这一次随机里有效，用来提示一句）
     commonFallback: false,
@@ -567,37 +569,63 @@
   function applyModeChange(mode) {
     state.mode = mode;
     if (mode === 'fixed') {
-      // 接着刚才随机出来的那个音节练：把声母和元音带进固定模式
-      if (state.parts) {
-        state.fixedOnset = state.parts.onset;
-        // 只带「词表里真的能勾选」的元音：o_implied（无元音符号的闭音节）在词表里
-        // 没有对应字块，带进来会卡成「卡片只显示一个辅音、元音栏什么都没选中」，
-        // 而且没有任何入口能清掉（开关在固定模式下是灰的，刷新也还在）。
-        // o_long 仍然过滤掉：它是「只选辅音」时的补位元音，用户并没有选过它
-        const vid = state.parts.vowelId;
-        state.fixedVowelId = (vid !== 'o_long' && SELECTABLE_VOWELS.includes(vid)) ? vid : null;
+      // 两种模式的卡片**互相独立**（跟小程序同一口径）：随机那张卡先收起来，
+      // 再把固定模式自己那张卡（字母 + 声调）放回去。第一次进固定模式就是空卡
+      // （卡片显示打招呼 + 「固定模式：点下面的字母」那行）。
+      state.modeCards.random = (state.parts || state.word)
+        ? {
+          parts: state.parts,
+          word: state.word,
+          wordFromRandom: state.wordFromRandom,
+          commonFallback: state.commonFallback,
+        }
+        : null;
+      const fixedCard = state.modeCards.fixed;
+      // 有 stash（本次会话里选过）就用它；没有就**保留**本地设置里恢复的固定字母——
+      // 网页版一直是「固定模式选过的字母会记住」，别因为这次改动把它弄丢。
+      if (fixedCard) {
+        state.fixedOnset = fixedCard.onset;
+        state.fixedVowelId = fixedCard.vowelId;
       }
+      state.parts = null;
+      state.word = null;
+      state.wordFromRandom = false;
+      state.commonFallback = false;
       applyMode();
       buildConsonants();
       buildVowels();
       applyFixed();
+      // 固定模式自己那张卡的声调：applyFixed 只看得到「当前的 state.parts」，
+      // 而进模式前已经把卡收起来了，所以这里按 stash 里的调补回去（还能用才补）
+      if (fixedCard && fixedCard.tone && state.parts && state.parts.tone !== fixedCard.tone) {
+        const option = R.toneOptions(state.parts, state.strict).find((t) => t.id === fixedCard.tone);
+        if (option && option.allowed) {
+          state.parts.tone = fixedCard.tone;
+          renderCard();
+        }
+      }
       save();
       return;
     }
-    // 切回随机模式：卡片上必须换回一张真词卡。固定模式拼的那个音节（大多没有
-    // 词义，声调那排也会跟着灰掉）如果留在卡上，就成了「随机模式里挂着一张
-    // 非法但还选中着」的状态——按当前档位和词表勾选重抽一张。
-    // 清单已经在页面上时 randomize() 是同步的，切模式的动画里不会先闪一下旧卡。
-    state.parts = null;
-    state.word = null;
-    state.commonFallback = false;
-    const drawn = randomize();
+    // 切回随机：固定模式那张卡先收好（下次进固定模式原样还回来），再把随机卡还回来。
+    // **不重抽、也不清空**（用户：「固定/随机卡片应该独立，不该被对方影响」）。
+    state.modeCards.fixed = (state.fixedOnset || state.fixedVowelId)
+      ? {
+        onset: state.fixedOnset,
+        vowelId: state.fixedVowelId,
+        tone: state.parts ? state.parts.tone : 'none',
+      }
+      : null;
+    const back = state.modeCards.random;
+    state.modeCards.random = null;
+    state.parts = back ? back.parts : null;
+    state.word = back ? back.word : null;
+    state.wordFromRandom = back ? back.wordFromRandom : false;
+    state.commonFallback = back ? back.commonFallback : false;
     applyMode();
     buildConsonants();
     buildVowels();
-    // 音频清单还没加载出来时 randomize() 是异步的：先摆一张空卡，
-    // 抽到词以后 applyPick() 会自己重画（不能不动，那会把旧卡留着）
-    if (!drawn) renderCard();
+    renderCard();
     save();
   }
 
@@ -756,14 +784,11 @@
       Seg.pulse(el.rangeSeg, id);
       flashHint(el.rangeHint);
       save();
-      // 换了池子就当场换一张卡（不然切到「常用词」还挂着上一档抽的词，看着像没反应）；
-      // 卡片过渡走 dir = 0 → 只淡出淡入，不左右滑（左右滑是「换模式」的语汇）
+      // **换档位不重抽当前卡**（用户：「真词/常用词切换时会刷新卡片，与逻辑不符」）：
+      // 档位管的是「下一张从哪个池子里抽」，不是给当前这张换词。只走一次淡出淡入，
+      // 让提示行跟着档位切换有交代（dir = 0，只淡入淡出，不左右滑）。
       settleSwap();
-      const apply = () => {
-        if (state.mode === 'fixed') applyFixed();
-        else if (state.parts || state.word) applyPick();
-        else renderCard();
-      };
+      const apply = () => renderCard();
       const timer = swapCard(0, apply, () => { pendingSwap = null; });
       pendingSwap = timer === null ? null : { apply, timer };
     });
