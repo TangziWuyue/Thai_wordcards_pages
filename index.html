@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN" data-font="sarabun" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>泰语组合练习</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1b1b'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%23fff'%3E%E0%B8%81%3C/text%3E%3C/svg%3E">
+  <!-- ?v= 是给浏览器看的版本号：页面更新后强制重新取这几个文件。
+       不加的话可能拿到「新的 app.js + 旧的 rules.js」这种组合，
+       新增的函数对不上就会直接报错、整个模式失效。发版时把这个号 +1。 -->
+  <link rel="stylesheet" href="fonts.css?v=62">
+  <link rel="stylesheet" href="fonts-cjk.css?v=62">
+  <link rel="stylesheet" href="style.css?v=62">
+  <!-- 脚本能跑就给 html 加个标记，用来隐藏下面那段「没能运行起来」的提示。
+       放在 head 里执行，正常打开时不会有闪烁；不执行脚本的预览器则会一直显示提示。 -->
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <main class="app">
+    <!-- 「预览」模式（iOS「文件」App、微信内置预览等）不执行脚本，页面上只会剩静态文字。
+         这段提示默认显示，脚本跑起来后会被隐藏掉。 -->
+    <div class="notice js-fallback">
+      <p class="notice-title">这个页面没能运行起来</p>
+      <p>页面要靠浏览器执行脚本才能显示内容。你现在用的是「预览」，它不执行脚本，所以只看到几个空标题。</p>
+      <p><b>请改用下面任意一种方式打开：</b></p>
+      <ul>
+        <li>电脑：把文件存到桌面，双击它（Windows 选 Chrome 或 Edge，Mac 用 Safari）</li>
+        <li>iPhone：「文件」App 里预览就是这个样子，请改用电脑打开</li>
+        <li>安卓：微信里点「用其他应用打开」→ 选浏览器</li>
+      </ul>
+      <p>不需要联网，也不需要安装字体。</p>
+    </div>
+
+    <header class="head">
+      <div class="head-row">
+        <h1>泰语组合练习</h1>
+        <a class="head-link" href="tutorial.html">拼读教学 →</a>
+      </div>
+      <p class="sub">随机组合辅音与元音，自己挑声调，跟着念出声。</p>
+    </header>
+
+    <div class="layout">
+      <div class="col-main">
+        <section class="card" id="card">
+          <p class="syllable" id="syllable" aria-live="polite">—</p>
+          <p class="roman" id="roman">点「随机组合」开始</p>
+          <!-- 这一行不隐藏、永远占位：内容在「真词 + 释义」和「空」之间变化时，
+               卡片高度不能跟着变，否则每换一个音节下面的按钮都会跳 -->
+          <p class="dict-hit" id="dictHit"></p>
+          <p class="parts" id="parts"></p>
+        </section>
+
+        <section class="block">
+          <div class="label-row">
+            <span class="label">声调</span>
+          </div>
+          <div class="tones" id="tones" role="group" aria-label="选择声调"></div>
+          <p class="hint tone-hint" id="toneHint"></p>
+        </section>
+
+        <section class="actions">
+          <div class="split">
+            <button type="button" class="btn primary split-main" id="randomBtn">随机组合<kbd>空格</kbd></button>
+            <button type="button" class="btn primary split-toggle" id="modeBtn" aria-pressed="false"
+                    title="切换：随机组合 / 自己挑选搭配" aria-label="切换随机模式与固定模式">⇄</button>
+          </div>
+          <button type="button" class="btn" id="speakBtn">播放发音<kbd>⏎</kbd></button>
+        </section>
+
+        <!-- 组合范围同时管着两件事：随机组合怎么拼、固定模式要不要用 อ 补位。
+             放在模式按钮正下方，因为它跟「随机 / 固定」是同一类选择，两种模式下都要看得到 -->
+        <div class="range-row">
+          <div class="seg" id="rangeSeg" role="group" aria-label="组合范围"></div>
+          <p class="hint range-hint" id="rangeHint"></p>
+        </div>
+      </div>
+
+      <div class="col-side">
+        <details class="panel" open>
+          <summary>词表</summary>
+          <div class="panel-body">
+            <div class="label-row">
+              <span class="label">辅音</span>
+              <span class="row-end">
+                <span class="hint" id="consHint">44 个</span>
+                <button type="button" class="mini" id="consAll">全选</button>
+                <button type="button" class="mini" id="consNone">全不选</button>
+              </span>
+            </div>
+            <div id="consonants"></div>
+            <div class="label-row">
+              <span class="label">元音</span>
+              <span class="row-end">
+                <span class="hint" id="vowelHint"></span>
+                <button type="button" class="mini" id="vowelAll">全选</button>
+                <button type="button" class="mini" id="vowelNone">全不选</button>
+              </span>
+            </div>
+            <!-- 容器本身不能带 chips：分组标题和每组字块要各占一行 -->
+            <div class="vowel-list" id="vowels"></div>
+          </div>
+        </details>
+
+        <details class="panel" id="dictPanel">
+          <summary>辞典</summary>
+          <div class="panel-body">
+            <div class="label-row">
+              <span class="label">常用词</span>
+              <span class="row-end">
+                <span class="hint" id="dictHint">—</span>
+                <button type="button" class="mini" id="dictMore">换一批</button>
+              </span>
+            </div>
+            <div class="dict-list" id="dictList"></div>
+            <p class="hint dict-note" id="dictNote"></p>
+            <p class="hint dict-source" id="dictSource"></p>
+          </div>
+        </details>
+
+        <details class="panel" id="optionsPanel">
+          <summary>选项</summary>
+          <div class="panel-body">
+            <div class="label-row">
+              <span class="label">字体</span>
+            </div>
+            <div class="seg" id="fontSeg" role="group" aria-label="泰文字体"></div>
+
+            <div class="label-row">
+              <span class="label">外观</span>
+            </div>
+            <div class="seg" id="themeSeg" role="group" aria-label="外观"></div>
+
+            <label class="switch" id="rowClusters">
+              <input type="checkbox" id="optClusters">
+              <span>允许辅音簇（กร กล คร …）</span>
+            </label>
+            <label class="switch" id="rowFinal">
+              <input type="checkbox" id="optFinal" checked>
+              <span>允许尾辅音（约一半概率）</span>
+            </label>
+            <label class="switch" id="rowVowelOnset">
+              <input type="checkbox" id="optVowelOnset">
+              <span>允许元音充当声母（ฤ ฤๅ ฦ ฦๅ）</span>
+            </label>
+            <label class="switch" id="rowImplicit">
+              <input type="checkbox" id="optImplicit">
+              <span>允许无元音符号的闭音节（กบ = kop）</span>
+            </label>
+            <label class="switch" id="rowAutoSpeak">
+              <input type="checkbox" id="optAutoSpeak">
+              <span>随机后自动朗读</span>
+            </label>
+
+            <p class="hint options-hint" id="optionsHint"></p>
+          </div>
+        </details>
+      </div>
+
+      <footer class="foot">
+        <div class="foot-row">
+          <span id="voiceInfo">语音：检测中…</span>
+          <span class="note">组合多为无意义音节，只练拼读</span>
+        </div>
+        <div class="foot-row">
+          <span><button type="button" class="link" id="tourBtn">新手引导</button> ·
+            <button type="button" class="link" id="whatsNewBtn">更新内容</button> ·
+            反馈 bug、提供建议，发送至 <a href="mailto:1019853751@qq.com">1019853751@qq.com</a></span>
+          <span>真词、固定模式的完整音节都有内置发音；拼不完整的组合按钮会变灰</span>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script src="rules.js?v=62"></script>
+  <script src="dict.js?v=62"></script>
+  <script src="audio.js?v=62"></script>
+  <script src="data/common.js?v=62"></script>
+  <script src="data/syllable-index.js?v=62"></script>
+  <script src="data/drop-words.js?v=62"></script>
+  <script src="pagefx.js?v=62"></script>
+  <script src="tour.js?v=62"></script>
+  <script src="seg.js?v=62"></script>
+  <script src="app.js?v=62"></script>
+</body>
+</html>

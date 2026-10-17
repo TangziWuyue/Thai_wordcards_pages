@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN" data-font="sarabun" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>泰语拼读入门 · 泰语组合练习</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1b1b'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%23fff'%3E%E0%B8%81%3C/text%3E%3C/svg%3E">
+  <!-- ?v= 跟练习页同一个版本号，发版时一起 +1（原因见 web/index.html 里的注释） -->
+  <link rel="stylesheet" href="fonts.css?v=62">
+  <link rel="stylesheet" href="fonts-cjk.css?v=62">
+  <link rel="stylesheet" href="style.css?v=62">
+  <link rel="stylesheet" href="tutorial.css?v=62">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <main class="app tut">
+    <div class="notice js-fallback">
+      <p class="notice-title">这个页面没能运行起来</p>
+      <p>表格里的字要由脚本填进去，你现在用的是「预览」，它不执行脚本。</p>
+      <p><b>请改用浏览器打开：</b>电脑上把文件存到桌面双击；手机上用浏览器打开这个 html。</p>
+    </div>
+
+    <header class="head">
+      <div class="head-row">
+        <h1>泰语拼读入门</h1>
+        <a class="head-link" href="index.html">去练习 →</a>
+      </div>
+      <p class="sub">44 个辅音 · 32 个元音 · 尾辅音 · 声调，一次讲清</p>
+    </header>
+
+    <div class="tut-top">
+      <div class="tut-search">
+        <input type="search" id="tutSearch" placeholder="查字母、注音、查词…（按 / 也可以）"
+               autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false"
+               aria-controls="tutResults" aria-label="在教学中搜索">
+        <button type="button" id="tutSearchClear" class="tut-search-clear" aria-label="清空" hidden>×</button>
+        <ul class="tut-results" id="tutResults" role="listbox" hidden></ul>
+      </div>
+      <nav class="toc" id="toc" aria-label="目录"></nav>
+    </div>
+
+    <section class="tut-sec" id="s-intro" data-title="概览">
+      <h2>一个泰语音节由什么组成</h2>
+      <p>泰文和中文一样是逐字排下来的，但读音要按「声母 + 元音 + 尾音 + 声调」四块拼：
+        左边是声母，元音可能写在声母的上、下、左、右，尾音收在最后，声调符号写在元音的上面。</p>
+      <div class="tut-rows plain" id="anatomy"></div>
+      <div class="tip-box">
+        <p class="tip-title">刚开始只要记住</p>
+        <p>看到一个字，先找声母，再找元音，最后看尾音和声调符号。四块找齐，读音就出来了。</p>
+      </div>
+    </section>
+
+    <section class="tut-sec" id="s-cons" data-title="辅音 44">
+      <h2>一、辅音 44 个</h2>
+      <p>辅音可以当声母（写在音节开头），其中大部分还能当尾音。
+        按声调规则分成中类、高类、低类——<b>这个分组不看读音高低，看的是写声调符号后读出来的调</b>。
+        所以同一个 k 音有两个字母：ข 高类、ค 低类，读法一样，配声调符号后就分开了。</p>
+      <div id="consTable"></div>
+      <div class="tip-box">
+        <p class="tip-title">字母名称读第几声</p>
+        <p>中辅音、低辅音的名称读第一声，高辅音读第五声。所以 ก 念 ko（平），ข 念 khǒ（升）。</p>
+        <p class="tip-title">送气 / 不送气</p>
+        <p>ก/ข、ต/ท、ป/พ、จ/ช 只差在有没有气喷出来。把手放在嘴前念 ข ท พ ช，能明显感觉到气流。</p>
+        <p class="tip-title">借词用字</p>
+        <p>ฎ ฏ ฐ ฑ ฒ ณ ศ ษ ฬ ฆ ฌ ญ ภ ธ 只出现在梵语、巴利语借词里，读音都跟某个常用字母相同（ฎ=ด、ฏ=ต、ศ=ส…），认得就行。</p>
+      </div>
+    </section>
+
+    <section class="tut-sec" id="s-vowels" data-title="元音 32">
+      <h2>二、元音 32 个</h2>
+      <p>课本把元音分成单元音 18、复合元音 6、超额元音 8，合起来 32 个「รูป」（写法）。
+        书里单独标元音时写成 <b>-า</b>（横杠代表辅音），这里统一用 <b>อ</b> 当底座，好让你看清贴上字母的样子。</p>
+      <div id="vowelTable"></div>
+      <div class="tip-box">
+        <p class="tip-title">长短音要分清楚</p>
+        <p>泰语靠长短音区别词义：只差拖不拖长就是两个词。短音干脆收住，长音拖够——这比声调更容易被忽略。</p>
+        <p class="tip-title">必须有尾音的那几个</p>
+        <p>อั、เ-ิ、เ-็ 只在闭音节里出现，后面一定跟尾辅音（กัน、เกิด、เก็ง）。เ-็ 还不写声调符号。</p>
+      </div>
+    </section>
+
+    <section class="tut-sec" id="s-finals" data-title="尾辅音">
+      <h2>三、尾辅音（ตัวสะกด）</h2>
+      <p>音节收尾的那个辅音叫尾辅音。泰语有 37 个字母能当尾音，但<b>读出来只有 8 种声音</b>——
+        字母长得不一样，落在尾巴上会合并成同一个音，这叫「中和」。
+        -ng -n -m -y -w 叫<b>清尾辅音</b>（能一直发下去），-k -t -p 叫<b>浊尾辅音</b>（憋一下就断）。</p>
+      <div id="finalTable"></div>
+      <p class="tut-note" id="finalCannot"></p>
+      <div class="tip-box">
+        <p class="tip-title">t 组最容易踩坑</p>
+        <p>จ ฉ ช ซ ฎ ฏ ฐ ฑ ฒ ด ต ถ ท ธ ศ ษ ส 这 18 个字母当尾音时一律读 t：รถ（车）读 rót，尾巴上的 ถ 不读 th。</p>
+        <p class="tip-title">活音节和死音节</p>
+        <p>尾巴是清尾辅音的叫<b>活音节</b>，是浊尾辅音的叫<b>死音节</b>。不写声调符号时读第几调，全看这个。</p>
+      </div>
+    </section>
+
+    <section class="tut-sec" id="s-tones" data-title="声调">
+      <h2>四、声调</h2>
+      <p>泰语有 5 个声调，写下来只有 4 个符号（还有一个「不写符号」）。
+        调号只是写在纸上的记号，<b>读第几调是算出来的</b>：辅音类别 + 音节死活 + 有没有写符号。</p>
+      <div id="toneTable"></div>
+      <p class="tut-note">下面这张表就是算法本身：横着看一行，就能查出任意音节读第几调。</p>
+      <div class="tone-rules" id="toneRules"></div>
+      <div class="tip-box">
+        <p class="tip-title">写得一样，读得可能不一样</p>
+        <p>低类辅音 + 长元音 + 写 อ้：写的是 อ้，实际读第 4 调，比如 รู้、ม้า、ค้า。所以不能只看符号。</p>
+        <p class="tip-title">อ๊ 和 อ๋ 只有中类能用</p>
+        <p>这两个符号只跟中类辅音搭配，高类和低类用不上。</p>
+      </div>
+      <p class="tut-cta"><a class="btn primary" href="index.html">去练习页拼一个试试</a></p>
+    </section>
+
+    <footer class="foot">
+      <div class="foot-row">
+        <span class="foot-group">
+          <span class="label">字体</span>
+          <span class="seg" id="fontSeg" role="group" aria-label="泰文字体"></span>
+        </span>
+        <span class="foot-group">
+          <span class="label">外观</span>
+          <span class="seg" id="themeSeg" role="group" aria-label="外观"></span>
+        </span>
+      </div>
+      <div class="foot-row">
+        <span><button class="link" type="button" id="tutTourBtn">新手引导</button> ·
+          <a href="index.html">回练习页</a> ·
+          反馈 bug、提供建议，发送至 <a href="mailto:1019853751@qq.com">1019853751@qq.com</a></span>
+      </div>
+    </footer>
+  </main>
+
+  <script src="rules.js?v=62"></script>
+  <script src="dict.js?v=62"></script>
+  <script src="audio.js?v=62"></script>
+  <script src="tutorial-data.js?v=62"></script>
+  <script src="tutorial-search.js?v=62"></script>
+  <script src="pagefx.js?v=62"></script>
+  <script src="tour.js?v=62"></script>
+  <script src="seg.js?v=62"></script>
+  <script src="tutorial.js?v=62"></script>
+</body>
+</html>
