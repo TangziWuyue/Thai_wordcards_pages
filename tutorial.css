@@ -507,14 +507,14 @@ html { scroll-behavior: smooth; }
 /* ── 声调规则表 ───────────────────────────────────────── */
 .tone-rules {
   margin-top: 16px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .trule {
   display: grid;
-  grid-template-columns: 5em repeat(6, minmax(6.6em, 1fr));
-  min-width: 45em;
+  /* 压进屏宽、不横滑（口径跟微信小程序一致：用户「滑动只有一部分」「既然打算固定了，
+     为什么手机上还是能左右滑」）。行头定宽、六个数据列均分，窄屏下允许换行，
+     整张表一次看全，行头不会被滑出视野。 */
+  grid-template-columns: 4.4em repeat(6, minmax(0, 1fr));
 }
 
 .trule > div {
@@ -570,6 +570,10 @@ html { scroll-behavior: smooth; }
 @media (max-width: 640px) {
   .tut-sec { margin-bottom: 52px; }
   .tut-sec h2 { font-size: 17px; }
+  /* 声调规则表：窄屏再收一档内边距和字号，六列 + 行头在一屏内放得下 */
+  .trule > div { padding: 8px 5px; font-size: 11px; }
+  .trule.head > div { font-size: 10px; }
+  .trule-one i { margin-left: 3px; }
   .trow { padding: 17px 0; row-gap: 3px; }
   .tut-rows.plain .trow { padding: 16px 0; }
   .t-say { margin-top: 7px; }

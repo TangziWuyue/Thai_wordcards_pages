@@ -678,6 +678,22 @@ kbd {
 
 .panel[open] summary::after { content: "−"; }
 
+/* 面板头的右侧概览（选项面板用）：跟小程序同一套口径——只列开着的；
+   全开写「全部开启」、全关写「全部关闭」，固定模式写「固定模式下不适用」。
+   定成一行，放不下就省略号，绝不把面板头撑成两行。 */
+.panel-sum {
+  margin-left: auto;
+  margin-right: 10px;
+  max-width: 62%;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .panel-body { padding: 4px 2px 20px; }
 
 /* 词库是「展开之后才联网取」的（2.3MB），取回来那一下会把面板顶高一大截。

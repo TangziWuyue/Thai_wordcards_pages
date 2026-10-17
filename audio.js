@@ -17,6 +17,26 @@
   let loadPromise = null;
   const els = new Map();   // word -> HTMLAudioElement
   const urlEls = new Map(); // url -> HTMLAudioElement（音节音频，不查清单）
+  let stateHandler = null;
+
+  /** 播放状态冒到界面：播放中按钮要灰掉、不许再点（跟小程序同一个口径） */
+  function emit(state) {
+    if (stateHandler) stateHandler(state);
+  }
+
+  /** 新建的 Audio 元素挂上状态事件：playing / ended / error / pause 都报一声 */
+  function watch(el) {
+    el.addEventListener('playing', () => emit('playing'));
+    el.addEventListener('ended', () => emit('idle'));
+    el.addEventListener('error', () => emit('idle'));
+    el.addEventListener('pause', () => emit('idle'));
+    return el;
+  }
+
+  /** 页面挂一个状态回调（playing / idle），用来灰掉播放按钮 */
+  function onState(fn) {
+    stateHandler = fn;
+  }
 
   function inject(src) {
     return new Promise((resolve, reject) => {
@@ -82,13 +102,16 @@
       if (!u) throw new Error(`没有内置发音：${word}`);
       let el = els.get(word);
       if (!el) {
-        el = new Audio(u);
+        el = watch(new Audio(u));
         el.preload = 'auto';
         els.set(word, el);
       }
       pauseOthers(el);
       el.currentTime = 0;
-      return el.play();
+      return el.play().then(() => emit('playing')).catch((err) => {
+        emit('idle');
+        throw err;
+      });
     });
   }
 
@@ -97,13 +120,16 @@
     if (!u) return Promise.reject(new Error('没有音频地址'));
     let el = urlEls.get(u);
     if (!el) {
-      el = new Audio(u);
+      el = watch(new Audio(u));
       el.preload = 'auto';
       urlEls.set(u, el);
     }
     pauseOthers(el);
     el.currentTime = 0;
-    return el.play();
+    return el.play().then(() => emit('playing')).catch((err) => {
+      emit('idle');
+      throw err;
+    });
   }
 
   /** 预加载（不播放），给「换一个」提前缓冲用。 */
@@ -112,7 +138,7 @@
     load().then(() => {
       const u = url(word);
       if (!u || els.has(word)) return;
-      const el = new Audio(u);
+      const el = watch(new Audio(u));
       el.preload = 'auto';
       els.set(word, el);
     }).catch(() => { /* 清单没加载出来就静默 */ });
@@ -123,5 +149,5 @@
     return load().then(() => true, () => false);
   }
 
-  global.ThaiAudio = { load, play, playUrl, fileUrl, warm, has, info, url, ready };
+  global.ThaiAudio = { load, play, playUrl, fileUrl, warm, has, info, url, ready, onState };
 })(typeof window !== 'undefined' ? window : globalThis);

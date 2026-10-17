@@ -38,6 +38,7 @@
   // audio.js 没加载出来（旧缓存等）时 A 为 null，发音功能整体不可用。
   const A = window.ThaiAudio || null;
   let audioReady = false;
+  let speaking = false;   // 播放中：播放按钮灰掉、不可再点（小程序同一个口径）
 
   const FONTS = [
     { id: 'sarabun', label: '标准体', sample: 'ก' },
@@ -103,6 +104,7 @@
     consHint: document.getElementById('consHint'),
     vowelHint: document.getElementById('vowelHint'),
     optionsHint: document.getElementById('optionsHint'),
+    optionsSummary: document.getElementById('optionsSummary'),
     rangeSeg: document.getElementById('rangeSeg'),
     rangeHint: document.getElementById('rangeHint'),
     rowClusters: document.getElementById('rowClusters'),
@@ -618,6 +620,7 @@
       row.title = fixed ? '固定模式下不适用（只影响随机组合）' : '';
     }
     applyRangeHint();
+    updateOptionsSummary();
     el.modeBtn.setAttribute('aria-pressed', String(fixed));
     el.modeBtn.title = fixed ? '当前：固定模式（点它切回随机组合）' : '切换：随机组合 / 自己挑选搭配';
     el.randomBtn.disabled = fixed;
@@ -628,6 +631,29 @@
       kbd.textContent = '空格';
       setChildren(el.randomBtn, document.createTextNode('随机组合'), kbd);
     }
+  }
+
+  /**
+   * 选项面板头右侧那行概览（从微信小程序搬回来的口径）：
+   * 只影响随机组合的五个开关——全开写「全部开启」、全关写「全部关闭」，
+   * 中间态写「N / 5 开启」；固定模式整块不适用，写一句「固定模式下不适用」。
+   * 永远是单行 + 省略号，不把面板头撑成两行（用户：「全开刚好撞一趟」）。
+   */
+  function updateOptionsSummary() {
+    if (!el.optionsSummary) return;
+    const fixed = state.mode === 'fixed';
+    if (fixed) {
+      el.optionsSummary.textContent = '固定模式下不适用';
+      el.optionsSummary.title = '灰掉的几项只对随机组合生效';
+      return;
+    }
+    const opts = [state.allowClusters, state.allowFinal, state.allowVowelOnset,
+      state.allowImplicit, state.autoSpeak];
+    const on = opts.filter(Boolean).length;
+    el.optionsSummary.textContent = on === 0
+      ? '全部关闭'
+      : (on === opts.length ? '全部开启' : `${on} / ${opts.length} 开启`);
+    el.optionsSummary.title = '';
   }
 
   function setAllVowels(on) {
@@ -1022,7 +1048,8 @@
     const text = currentText();
     const hasWord = !!(A && A.has(text));
     const syl = syllableFile();
-    el.speakBtn.disabled = !(hasWord || syl);
+    // 播放中＝灰掉（用户口径「遮罩就是灰掉」）；放完/出错由 audio.js 的状态回调恢复
+    el.speakBtn.disabled = speaking || !(hasWord || syl);
     if (hasWord) {
       el.speakBtn.title = '播放内置发音（AI 合成 + 声调校正）';
     } else if (syl) {
@@ -1032,6 +1059,16 @@
     } else {
       el.speakBtn.title = '这个组合拼不完整，没有发音';
     }
+  }
+
+  // 播放状态：播放中把「播放发音」灰掉，放完 / 出错自动恢复（audio.js 的 onState）
+  if (A && A.onState) {
+    A.onState((s) => {
+      const on = s === 'playing';
+      if (speaking === on) return;
+      speaking = on;
+      updateSpeakBtn();
+    });
   }
 
   /** 卡片上现在是哪段泰文；还没生成时就是打招呼的那个词 */
@@ -1169,6 +1206,15 @@
 
   /** 把辞典里的词放到主卡片上：放大字形 + 注音 + 释义都在同一处看 */
   function showWordOnCard(word) {
+    // 辞典点词 → 卡片是**随机模式**的东西（跟小程序「词典跳卡跟随切回随机」一个口径）：
+    // 页面原本停在固定模式的话，先把模式切回来，否则固定模式会拿它当「自己挑字母」的状态
+    if (state.mode !== 'random') {
+      state.mode = 'random';
+      applyMode();
+      buildConsonants();
+      buildVowels();
+      save();
+    }
     state.parts = null;
     state.commonFallback = false;
     state.word = word;
@@ -1424,6 +1470,7 @@
   }
 
   function speak() {
+    if (speaking) return;
     const text = currentText();
     if (A && A.has(text)) {
       speakText(text);
@@ -1560,6 +1607,7 @@
   for (const [input, key] of bindings) {
     input.addEventListener('change', () => {
       state[key] = input.checked;
+      updateOptionsSummary();
       save();
     });
   }
