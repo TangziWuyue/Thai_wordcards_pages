@@ -1,1 +1,1 @@
-Thai Words 泰语词汇训练 Demo
+Thai Words 泰语拼读训练 Demo。
